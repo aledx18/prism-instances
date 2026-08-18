@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.aledx18.prism-instances",
+  "name": "Prism Instances",
+  "version": "0.1.0",
+  "author": "Aledev",
+  "license": "MIT",
+  "description": "View and launch Prism Launcher Minecraft instances from the Omarchy bar.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Prism Instances",
+    "category": "Gaming",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}
