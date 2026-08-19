@@ -1,13 +1,21 @@
-# Prism Instances
+# 🎮 Prism Instances · Minecraft Worlds
 
-An Omarchy bar plugin for viewing and launching your **Minecraft** instances managed by [Prism Launcher](https://prismlauncher.org/).
+> ⛏️ Launch your **Minecraft worlds** directly from the Omarchy bar with [Prism Launcher](https://prismlauncher.org/).
 
-Click the `󰍳` icon in the bar to open a compact panel with:
+Click the `󰍳` icon to open your compact world launcher:
 
-- Your active Prism account name.
-- Each instance's name, Minecraft version, loader, total play time, and last played date.
-- A direct launch action through Prism Launcher's CLI.
-- Optional custom instance icons.
+- 👤 Your active Prism account.
+- ▶️ Direct launching through Prism Launcher's CLI.
+- 🌍 Your Minecraft instances.
+- 🧱 Minecraft version and mod loader for each world.
+- ⏱️ Total play time and last played date.
+- 🖼️ Optional custom instance icons.
+
+## Preview
+
+![Prism Instances panel](preview.png)
+
+![Prism Instances panel with Minecraft worlds](preview2.png)
 
 ## Requirements
 
