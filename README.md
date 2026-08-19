@@ -15,7 +15,9 @@ Click the `󰍳` icon to open your compact world launcher:
 
 ![Prism Instances panel](preview.png)
 
+<div align="center">
 ![Prism Instances panel with Minecraft worlds](preview2.png)
+</div>
 
 ## Requirements
 
