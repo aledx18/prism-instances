@@ -6,6 +6,8 @@ BarWidget {
   id: root
   moduleName: "io.github.aledx18.prism-instances"
 
+  visible: true
+
   readonly property bool opened: panelLoader.item
     ? panelLoader.item.opened === true
     : false
@@ -52,7 +54,7 @@ BarWidget {
     }
   }
 
-  WidgetButton {
+  BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
