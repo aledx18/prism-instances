@@ -22,6 +22,16 @@ Panel {
 
             property var runningState: ({})
             property int tick: 0
+              property string instanceSearch: ""
+                readonly property var filteredInstances: {
+                  if (!root.instanceSearch) return root.instances
+                  var needle = root.instanceSearch.toLowerCase()
+                  return root.instances.filter(function(it) {
+                  return (it.name && it.name.toLowerCase().indexOf(needle) !== -1)
+                  || (it.version && it.version.toLowerCase().indexOf(needle) !== -1)
+                  || (it.loader && it.loader.toLowerCase().indexOf(needle) !== -1)
+                })
+              }
 
               function open()
               {
@@ -88,7 +98,8 @@ Panel {
                   loader: parts[3],
                   totalTime: parseInt(parts[4], 10) || 0,
                   iconPath: parts.length > 5 ? parts[5] : "",
-                  lastLaunch: parts.length > 6 ? parseInt(parts[6], 10) || 0 : 0
+                  lastLaunch: parts.length > 6 ? parseInt(parts[6], 10) || 0 : 0,
+                  instancePath: parts.length > 7 ? parts[7] : ""
                 })
               }
               return rows
@@ -105,6 +116,13 @@ Panel {
               root.close()
               Util.execDetached("bash " + root.shellQuote(root.launchScript)
               + " " + root.shellQuote(instanceId))
+            }
+
+            function openFolder(instancePath)
+            {
+              if (!instancePath) return
+              root.close()
+              Util.execDetached("xdg-open " + root.shellQuote(instancePath))
             }
 
             function formatPlayTime(seconds)
@@ -187,7 +205,7 @@ Panel {
             {
               var text = root.formatSession(durationSeconds)
               Util.execDetached("notify-send " + root.shellQuote(name)
-              + " " + root.shellQuote("Jugaste " + text))
+              + " " + root.shellQuote("Played for " + text + " — session ended"))
             }
 
             function formatSession(seconds)
@@ -263,7 +281,7 @@ Panel {
         bar: root.bar
         open: root.opened
         focusTarget: keyCatcher
-        contentWidth: panel.fittedContentWidth(Style.space(360))
+        contentWidth: panel.fittedContentWidth(Style.space(420))
         contentHeight: panel.fittedContentHeight(content.implicitHeight)
 
         PanelKeyCatcher {
@@ -275,319 +293,363 @@ Panel {
           onTabRequested: function(direction) {
           root.switchPanel(direction)
         }
-        onTextKey: function(text) {
-        if (text === "r" || text === "R")
-          root.refresh()
-      }
 
-      Column {
-        id: content
+        Column {
+          id: content
 
-        width: parent.width
-        spacing: Style.space(10)
-
-        // =========================================================
-        // HEADER
-        // =========================================================
-
-        Item {
           width: parent.width
-          height: Style.space(48)
-          visible: root.launcherAvailable
+          spacing: Style.space(10)
 
-          // Icon
-          Rectangle {
-            id: icon
+          // =========================================================
+          // HEADER
+          // =========================================================
 
-            width: Style.space(40)
-            height: Style.space(40)
+          Row {
+            width: parent.width
+            height: Style.space(48)
+            visible: root.launcherAvailable
+            spacing: Style.space(10)
 
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
+            Rectangle {
+              id: icon
+              width: Style.space(40)
+              height: Style.space(40)
+              radius: width / 2
+              color: "transparent"
+              anchors.verticalCenter: parent.verticalCenter
 
-            radius: width / 2
-            color: "transparent"
+              Text {
+                anchors.centerIn: parent
+                text: "󰍳"
+                font.pixelSize: Style.space(30)
+                color: root.panelForeground
+              }
+            }
 
-            Text {
-              anchors.centerIn: parent
+            Column {
+              width: parent.width - icon.width - parent.spacing
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: Style.space(2)
 
-              text: "󰍳"
-              font.pixelSize: Style.space(30)
-              color: root.panelForeground
+              Text {
+                id: title
+                width: parent.width
+                text: "Prism Instances"
+                color: root.panelForeground
+                font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                font.pixelSize: Style.font.heading
+                font.bold: true
+                elide: Text.ElideRight
+              }
+
+              Text {
+                width: parent.width
+                text: "Account: " + (root.accountName || "No active Prism account.")
+                color: root.panelForeground
+                font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                opacity: 0.75
+                elide: Text.ElideRight
+              }
             }
           }
 
-          // Título
-          Text {
-            id: title
 
-            anchors.left: icon.right
-            anchors.leftMargin: Style.space(10)
-            anchors.top: icon.top
+          // =========================================================
+          // SEPARATOR
+          // =========================================================
 
-            text: "Prism Instances"
+          Rectangle {
+            width: parent.width
+            height: 1
+            visible: root.launcherAvailable
             color: root.panelForeground
-            font.family: root.bar ? root.bar.fontFamily : Style.font.family
-            font.pixelSize: Style.font.heading
-            font.bold: true
-            anchors.right: refreshLabel.left
-            anchors.rightMargin: Style.space(8)
-            elide: Text.ElideRight
+            opacity: 0.15
           }
 
-          Text {
-            id: refreshLabel
+          Item {
+            width: parent.width
+            height: Style.space(32)
+            visible: root.launcherAvailable
 
-            anchors.right: parent.right
-            anchors.top: icon.top
+            Text {
+              id: searchIcon
+              anchors.left: parent.left
+              anchors.leftMargin: Style.space(10)
+              anchors.verticalCenter: parent.verticalCenter
+              text: "󰍉"
+              color: Util.alpha(root.panelForeground, 0.55)
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.bodySmall
+              z: 2
+            }
 
-            text: "R: Refresh"
-            color: root.panelForeground
-            font.family: root.bar ? root.bar.fontFamily : Style.font.family
-            font.pixelSize: Style.font.caption
-            opacity: 0.75
-          }
-
-          // Subtítulo
-          Text {
-            anchors.left: title.left
-            anchors.top: title.bottom
-            anchors.topMargin: Style.space(2)
-
-            text: "Account: " + (root.accountName || "No active Prism account.")
-            color: root.panelForeground
-            font.family: root.bar ? root.bar.fontFamily : Style.font.family
-            font.pixelSize: Style.font.bodySmall
-            opacity: 0.75
-          }
-        }
-
-
-        // =========================================================
-        // SEPARATOR
-        // =========================================================
-
-        Rectangle {
-          width: parent.width
-          height: 1
-          visible: root.launcherAvailable
-
-          color: root.panelForeground
-          opacity: 0.15
-        }
-
-
-        // =========================================================
-        // DESCRIPTION
-        // =========================================================
-
-        Text {
-          width: parent.width
-
-          text: {
-            if (!root.launcherAvailable)
-              return "Prism Launcher is not installed."
-            if (root.instances.length > 0)
-              return "Select an instance to launch it."
-            return "No Minecraft instances found."
-          }
-
-          color: root.panelForeground
-          font.family: root.bar ? root.bar.fontFamily : Style.font.family
-          font.pixelSize: Style.font.body
-          wrapMode: Text.WordWrap
-
-          topPadding: Style.space(2)
-          bottomPadding: Style.space(2)
-        }
-
-        Text {
-          width: parent.width
-          visible: !root.launcherAvailable
-
-          text: "Install Prism Launcher to manage\nyour Minecraft instances from here."
-          color: root.panelForeground
-          font.family: root.bar ? root.bar.fontFamily : Style.font.family
-          font.pixelSize: Style.font.bodySmall
-          opacity: 0.6
-          wrapMode: Text.WordWrap
-
-          bottomPadding: Style.space(4)
-        }
-
-
-        // =========================================================
-        // INSTANCES
-        // =========================================================
-
-        Column {
-          width: parent.width
-
-          spacing: Style.space(6)
-          visible: root.launcherAvailable && root.instances.length > 0
-
-          Repeater {
-            model: root.instances
-
-            Button {
-              id: instanceButton
-              required property var modelData
-              required property int index
-              enabled: modelData.running !== true
-              opacity: modelData.running === true ? 0.55 : 1.0
-              width: parent.width
-              height: Style.space(60)
-
-              bordered: true
-              selected: false
+            TextField {
+              id: searchField
+              anchors.fill: parent
+              leftPadding: Style.space(28)
+              rightPadding: Style.space(26)
+              placeholderText: "Search instances…"
+              text: root.instanceSearch
+              onTextChanged: root.instanceSearch = text
               foreground: root.panelForeground
-
-              leftPadding: Style.space(10)
-              rightPadding: Style.space(10)
-
-              onClicked: {
-                if (modelData.running === true) return
-                root.launch(modelData.id)
+              Keys.onEscapePressed: {
+                if (root.instanceSearch.length > 0) root.instanceSearch = ""
+                else root.close()
+                }
               }
 
-              HoverHandler {
-                id: hoverHandler
-              }
-
-              Rectangle {
-                anchors.fill: parent
-                radius: Style.space(6)
-                color: root.panelForeground
-                opacity: hoverHandler.hovered ? 0.05 : 0
-                Behavior on opacity { NumberAnimation { duration: 100 } }
-              }
-
-              Item {
-                id: instanceContent
-
-                anchors.left: parent.left
+              Text {
+                visible: root.instanceSearch.length > 0
                 anchors.right: parent.right
-                anchors.leftMargin: parent.leftPadding
-                anchors.rightMargin: parent.rightPadding
-                height: Style.space(40)
+                anchors.rightMargin: Style.space(8)
                 anchors.verticalCenter: parent.verticalCenter
-
-                // Ícono de la instancia
-                Rectangle {
-                  id: instanceIcon
-
-                  width: Style.space(35)
-                  height: Style.space(35)
-                  radius: Style.space(8)
-                  color: "#262734"
-                  opacity: hoverHandler.hovered ? 0.9 : 1
-                  visible: modelData.iconPath.length > 0
-                  anchors.left: parent.left
-                  anchors.verticalCenter: parent.verticalCenter
-
-                  Image {
-                    anchors.fill: parent
-
-                    anchors.margins: Style.space(4)
-                    source: modelData.iconPath.length > 0 ? "file://" + modelData.iconPath : ""
-                    fillMode: Image.PreserveAspectFit
+                text: "✕"
+                color: Util.alpha(root.panelForeground, 0.6)
+                font.pixelSize: Style.font.bodySmall
+                z: 2
+                MouseArea {
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(6)
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: {
+                    searchField.text = ""
+                    root.instanceSearch = ""
                   }
                 }
+              }
+            }
 
-                Column {
-                  id: instanceDetails
 
-                  anchors.left: instanceIcon.visible
-                  ? instanceIcon.right : parent.left
-                  anchors.leftMargin: instanceIcon.visible ? Style.space(10) : 0
-                  anchors.right: launchArrow.left
-                  anchors.rightMargin: Style.space(10)
-                  anchors.verticalCenter: parent.verticalCenter
-                  spacing: Style.space(4)
+            // =========================================================
+            // DESCRIPTION
+            // =========================================================
+
+            Text {
+              width: parent.width
+
+              text: {
+                if (!root.launcherAvailable)
+                  return "Prism Launcher is not installed."
+                if (root.instances.length > 0)
+                  return "Select an instance to launch it."
+                return "No Minecraft instances found."
+              }
+
+              color: root.panelForeground
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.body
+              wrapMode: Text.WordWrap
+
+              topPadding: Style.space(2)
+              bottomPadding: Style.space(2)
+            }
+
+            Text {
+              width: parent.width
+              visible: !root.launcherAvailable
+
+              text: "Install Prism Launcher to manage\nyour Minecraft instances from here."
+              color: root.panelForeground
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.bodySmall
+              opacity: 0.6
+              wrapMode: Text.WordWrap
+
+              bottomPadding: Style.space(4)
+            }
+
+
+            // =========================================================
+            // INSTANCES
+            // =========================================================
+
+            Text {
+              width: parent.width
+              visible: root.launcherAvailable && root.instances.length > 0 && root.filteredInstances.length === 0
+              text: "No results for \"" + root.instanceSearch + "\""
+              color: Util.alpha(root.panelForeground, 0.7)
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.bodySmall
+              wrapMode: Text.WordWrap
+              topPadding: Style.space(2)
+              bottomPadding: Style.space(2)
+            }
+
+            Column {
+              width: parent.width
+
+              spacing: Style.space(6)
+              visible: root.launcherAvailable && root.instances.length > 0
+
+              Repeater {
+                model: root.filteredInstances
+
+                BorderSurface {
+                  id: instanceCard
+                  required property var modelData
+                  required property int index
+
+                  width: parent.width
+                  height: Style.space(64)
+                  radius: Style.space(8)
+                  color: "transparent"
+                  borderSpec: Border.controlSpec("normal", root.panelForeground, Color.accent)
+                  opacity: modelData.running === true ? 0.7 : 1.0
+
+                  HoverHandler {
+                    id: hoverHandler
+                  }
+
+                  Rectangle {
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: root.panelForeground
+                    opacity: hoverHandler.hovered && modelData.running !== true ? 0.04 : 0
+                    Behavior on opacity { NumberAnimation { duration: 100 } }
+                  }
 
                   Row {
-                    spacing: Style.space(6)
+                    id: cardRow
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: Style.space(10)
+                    anchors.rightMargin: Style.space(10)
+                    spacing: Style.space(10)
 
-                    Text {
-                      text: modelData.name
-                      color: root.panelForeground
-                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                      font.pixelSize: Style.font.body
-                      font.bold: true
-                      elide: Text.ElideRight
-                    }
-
-                    Rectangle {
-                      width: loaderVersionText.implicitWidth + Style.space(12)
-                      height: Style.space(17)
-                      radius: height / 2
-                      color: "#262734"
+                    // Bloque informativo (no clickeable)
+                    Row {
+                      width: cardRow.width - actionsRow.width - Style.space(10)
+                      spacing: Style.space(10)
                       anchors.verticalCenter: parent.verticalCenter
 
-                      Text {
-                        id: loaderVersionText
-                        anchors.centerIn: parent
-                        text: (modelData.loader || "Vanilla") + " " + (modelData.version || "?")
-                        color: root.panelForeground
-                        font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                        font.pixelSize: Style.font.caption
+                      Rectangle {
+                        id: instanceIcon
+                        width: Style.space(35)
+                        height: Style.space(35)
+                        radius: Style.space(8)
+                        color: "#262734"
+                        visible: modelData.iconPath.length > 0
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Image {
+                          anchors.fill: parent
+                          anchors.margins: Style.space(4)
+                          source: modelData.iconPath.length > 0 ? "file://" + modelData.iconPath : ""
+                          fillMode: Image.PreserveAspectFit
+                        }
+                      }
+
+                      Column {
+                        id: instanceDetails
+                        width: parent.width - (instanceIcon.visible ? instanceIcon.width + Style.space(10) : 0)
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: Style.space(4)
+
+                        Row {
+                          spacing: Style.space(6)
+                          width: parent.width
+
+                          Text {
+                            text: modelData.name
+                            color: root.panelForeground
+                            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                            font.pixelSize: Style.font.body
+                            font.bold: true
+                            elide: Text.ElideRight
+                          }
+
+                          Rectangle {
+                            width: Math.min(loaderVersionText.implicitWidth + Style.space(12), Style.space(100))
+                            height: Style.space(17)
+                            radius: height / 2
+                            color: "#262734"
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                              id: loaderVersionText
+                              width: parent.width - Style.space(12)
+                              anchors.centerIn: parent
+                              horizontalAlignment: Text.AlignHCenter
+                              elide: Text.ElideRight
+                              text: ((modelData.loader || "Vanilla").split(" ")[0]) + " " + (modelData.version || "?")
+                              color: root.panelForeground
+                              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                              font.pixelSize: Style.font.caption
+                            }
+                          }
+
+                        }
+
+                        Row {
+                          spacing: Style.space(6)
+                          width: parent.width
+
+                          Text {
+                            text: "󰃰 " + root.formatPlayTime(modelData.totalTime)
+                            color: root.panelForeground
+                            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                            font.pixelSize: Style.font.caption
+                            opacity: 0.55
+                          }
+
+                          Text {
+                            text: "·"
+                            color: root.panelForeground
+                            font.pixelSize: Style.font.caption
+                            opacity: 0.3
+                          }
+
+                          Text {
+                            text: root.formatLastPlayed(modelData.lastLaunch)
+                            color: root.panelForeground
+                            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                            font.pixelSize: Style.font.caption
+                            opacity: 0.55
+                          }
+                        }
                       }
                     }
 
-                    Text {
-                      visible: modelData.running === true
-                      height: Style.space(17)
-                      verticalAlignment: Text.AlignVCenter
-                      text: "· Running 🟢 " + root.formatSession(
-                        Math.floor(Date.now() / 1000) - modelData.sessionStart + (root.tick * 0)
-                      )
-                      color: root.panelForeground
-                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                      font.pixelSize: Style.font.caption
+                    Row {
+                      id: actionsRow
+                      anchors.verticalCenter: parent.verticalCenter
+                      spacing: Style.space(6)
+
+                      Button {
+                        id: launchButton
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.running === true ? "Running 🟢 " + root.formatSession(
+                          Math.floor(Date.now() / 1000) - modelData.sessionStart + (root.tick * 0)
+                        ) : "󰐊 Play"
+                        bordered: true
+                        selected: false
+                        foreground: root.panelForeground
+                        fontSize: Style.font.caption
+                        horizontalPadding: Style.space(10)
+                        verticalPadding: Style.space(4)
+                        tooltipText: modelData.running === true ? "" : "Launch"
+                        enabled: modelData.running !== true
+                        opacity: enabled ? 1.0 : 0.65
+                        onClicked: root.launch(modelData.id)
+                      }
+
+                      Button {
+                        id: folderButton
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰉋"
+                        bordered: true
+                        selected: false
+                        foreground: root.panelForeground
+                        fontSize: Style.font.caption
+                        horizontalPadding: Style.space(8)
+                        verticalPadding: Style.space(4)
+                        tooltipText: "Open Folder"
+                        onClicked: root.openFolder(modelData.instancePath)
+                      }
                     }
                   }
-
-                  Row {
-                    spacing: Style.space(6)
-
-                    Text {
-                      text: "󰃰 " + root.formatPlayTime(modelData.totalTime)
-                      color: root.panelForeground
-                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                      font.pixelSize: Style.font.caption
-                      opacity: 0.55
-                    }
-
-                    Text {
-                      text: "·"
-                      color: root.panelForeground
-                      font.pixelSize: Style.font.caption
-                      opacity: 0.3
-                    }
-
-                    Text {
-                      text: root.formatLastPlayed(modelData.lastLaunch)
-                      color: root.panelForeground
-                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                      font.pixelSize: Style.font.caption
-                      opacity: 0.55
-                    }
-
-                  }
-                }
-                Text {
-                  id: launchArrow
-                  width: Style.space(20)
-                  anchors.right: parent.right
-                  anchors.verticalCenter: parent.verticalCenter
-                  visible: modelData.running !== true
-                  text: "󰐊"
-                  color: root.panelForeground
-                  opacity: hoverHandler.hovered ? 0.9 : 0.3
-                  font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                  font.pixelSize: Style.font.body
-                  horizontalAlignment: Text.AlignRight
-                  Behavior on opacity { NumberAnimation { duration: 100 } }
                 }
               }
             }
@@ -595,5 +657,3 @@ Panel {
         }
       }
     }
-  }
-}

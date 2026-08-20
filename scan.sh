@@ -64,6 +64,7 @@ for dir in "$base"/*; do
 
   total_time=$(awk -F= '$1 == "totalTimePlayed" { print $2; exit }' "$config")
   last_launch=$(awk -F= '$1 == "lastLaunchTime" { print $2; exit }' "$config")
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-    "$id" "$name" "$version" "$loader" "${total_time:-0}" "$icon_path" "${last_launch:-0}"
+  instance_path="$dir/minecraft"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$id" "$name" "$version" "$loader" "${total_time:-0}" "$icon_path" "${last_launch:-0}" "$instance_path"
 done
