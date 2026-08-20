@@ -13,10 +13,9 @@ Click the `󰍳` icon to open your compact world launcher:
 
 ## Preview
 
-![Prism Instances panel](preview.png)
 
 <div align="center">
-  <p align="center"> <img src="preview2.png" width="400"> </p>
+  <p align="center"> <img src="preview.png" width="400"> </p>
 </div>
 
 ## Requirements
