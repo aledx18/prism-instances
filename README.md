@@ -1,4 +1,4 @@
-# 🎮 Prism Instances · Minecraft Worlds
+# 🎮 Prism Instances · Minecraft
 
 > ⛏️ Launch your **Minecraft worlds** directly from the Omarchy bar with [Prism Launcher](https://prismlauncher.org/).
 
@@ -38,11 +38,7 @@ omarchy plugin add https://github.com/aledx18/prism-instances.git --enable
 
 Then reload the Omarchy shell or restart the bar if the plugin does not appear immediately.
 
-## Dependencies
-
-- **Prism Launcher** must be installed and available as `prismlauncher` or `PrismLauncher` in `PATH`.
-- **Bash** is required at runtime because the panel executes the scanner through Bash.
-- **`jq`** is optional. When available, it enables Minecraft/loader version metadata and active account name detection.
+**Prism Launcher** must be installed and available as `prismlauncher` or `PrismLauncher` in `PATH`.
 
 The plugin does not install, configure, or remove Prism Launcher, Minecraft, or any system package.
 
@@ -66,17 +62,6 @@ The scanner looks for the icon named by `iconKey` in Prism's configured `IconsDi
 ~/.local/share/PrismLauncher/icons/vanilla_custom.png
 ```
 
-Instances without a matching custom PNG continue to work; only the image area is omitted.
-
-## Configuration
-
-The scanner supports these environment variables:
-
-- `PRISM_DATA_DIR` — override Prism's data directory.
-- `PRISM_INSTANCES_DIR` — override the instances directory.
-
-Prism's `IconsDir` setting is read automatically from `prismlauncher.cfg`.
-
 ## Privacy and safety
 
 The plugin is read-only. It reads only:
@@ -88,8 +73,6 @@ The plugin is read-only. It reads only:
 - The referenced custom icon image, when it exists.
 
 It never reads account tokens, skins, saves, logs, or other account data. It does not write, delete, or modify Prism Launcher files or system files.
-
-The optional Minecraft and loader metadata is read with `jq` when available. Instance discovery and launching continue to work without it.
 
 ## Development
 
