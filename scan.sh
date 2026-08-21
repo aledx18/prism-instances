@@ -65,6 +65,14 @@ for dir in "$base"/*; do
   total_time=$(awk -F= '$1 == "totalTimePlayed" { print $2; exit }' "$config")
   last_launch=$(awk -F= '$1 == "lastLaunchTime" { print $2; exit }' "$config")
   instance_path="$dir/minecraft"
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-    "$id" "$name" "$version" "$loader" "${total_time:-0}" "$icon_path" "${last_launch:-0}" "$instance_path"
+  mod_count=0
+  for mods_dir in "$dir/minecraft/mods" "$dir/mods"; do
+    if [ -d "$mods_dir" ]; then
+      count=$(find "$mods_dir" -maxdepth 1 -type f -name "*.jar" 2>/dev/null | wc -l)
+      if [ -z "$count" ]; then count=0; fi
+      mod_count=$((mod_count + count))
+    fi
+  done
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$id" "$name" "$version" "$loader" "${total_time:-0}" "$icon_path" "${last_launch:-0}" "$instance_path" "$mod_count"
 done

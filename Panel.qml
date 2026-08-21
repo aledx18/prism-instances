@@ -99,7 +99,8 @@ Panel {
                   totalTime: parseInt(parts[4], 10) || 0,
                   iconPath: parts.length > 5 ? parts[5] : "",
                   lastLaunch: parts.length > 6 ? parseInt(parts[6], 10) || 0 : 0,
-                  instancePath: parts.length > 7 ? parts[7] : ""
+                  instancePath: parts.length > 7 ? parts[7] : "",
+                  modCount: parts.length > 8 ? parseInt(parts[8], 10) || 0 : 0
                 })
               }
               return rows
@@ -366,7 +367,6 @@ Panel {
                     }
                   }
 
-
                   // =========================================================
                   // SEPARATOR
                   // =========================================================
@@ -470,7 +470,6 @@ Panel {
 
                       bottomPadding: Style.space(4)
                     }
-
 
                     // =========================================================
                     // INSTANCES
@@ -591,6 +590,15 @@ Panel {
                                     }
                                   }
 
+                                  Text {
+                                    visible: modelData.modCount > 0
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "· 󰏓 " + modelData.modCount + (modelData.modCount === 1 ? " Mod" : " mods")
+                                    color: root.panelForeground
+                                    font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                                    font.pixelSize: Style.font.caption
+                                    opacity: 0.6
+                                  }
                                 }
 
                                 Row {
@@ -619,8 +627,6 @@ Panel {
                                     font.pixelSize: Style.font.caption
                                     opacity: 0.55
                                   }
-
-
                                 }
                               }
                             }
